@@ -13,7 +13,7 @@ import { KeyCode } from 'vs/base/common/keyCodes';
 import { Color } from 'vs/base/common/color';
 import { mixin } from 'vs/base/common/objects';
 import { Event as BaseEvent, Emitter } from 'vs/base/common/event';
-import { dispose, IDisposable } from 'vs/base/common/lifecycle';
+import { dispose, IDisposable, Disposable } from 'vs/base/common/lifecycle';
 import { Gesture, EventType } from 'vs/base/browser/touch';
 
 export interface IButtonOptions extends IButtonStyles {
@@ -33,7 +33,7 @@ const defaultOptions: IButtonStyles = {
 	buttonForeground: Color.white
 };
 
-export class Button {
+export class Button extends Disposable {
 
 	private $el: Builder;
 	private options: IButtonOptions;
@@ -43,12 +43,14 @@ export class Button {
 	private buttonForeground: Color;
 	private buttonBorder: Color;
 
-	private _onDidClick = new Emitter<any>();
+	private _onDidClick = this._register(new Emitter<any>());
 	readonly onDidClick: BaseEvent<Event> = this._onDidClick.event;
 
 	private focusTracker: DOM.IFocusTracker;
 
 	constructor(container: HTMLElement, options?: IButtonOptions) {
+		super();
+
 		this.options = options || Object.create(null);
 		mixin(this.options, defaultOptions, false);
 
@@ -57,10 +59,10 @@ export class Button {
 		this.buttonForeground = this.options.buttonForeground;
 		this.buttonBorder = this.options.buttonBorder;
 
-		this.$el = $('a.monaco-button').attr({
+		this.$el = this._register($('a.monaco-button').attr({
 			'tabIndex': '0',
 			'role': 'button'
-		}).appendTo(container);
+		}).appendTo(container));
 
 		Gesture.addTarget(this.$el.getHTMLElement());
 
@@ -74,7 +76,7 @@ export class Button {
 		});
 
 		this.$el.on(DOM.EventType.KEY_DOWN, e => {
-			let event = new StandardKeyboardEvent(e as KeyboardEvent);
+			const event = new StandardKeyboardEvent(e as KeyboardEvent);
 			let eventHandled = false;
 			if (this.enabled && event.equals(KeyCode.Enter) || event.equals(KeyCode.Space)) {
 				this._onDidClick.fire(e);
@@ -100,7 +102,7 @@ export class Button {
 		});
 
 		// Also set hover background when button is focused for feedback
-		this.focusTracker = DOM.trackFocus(this.$el.getHTMLElement());
+		this.focusTracker = this._register(DOM.trackFocus(this.$el.getHTMLElement()));
 		this.focusTracker.onDidFocus(() => this.setHoverBackground());
 		this.focusTracker.onDidBlur(() => this.applyStyles()); // restore standard styles
 
@@ -176,18 +178,6 @@ export class Button {
 
 	focus(): void {
 		this.$el.domFocus();
-	}
-
-	dispose(): void {
-		if (this.$el) {
-			this.$el.dispose();
-			this.$el = null;
-
-			this.focusTracker.dispose();
-			this.focusTracker = null;
-		}
-
-		this._onDidClick.dispose();
 	}
 }
 
