@@ -542,14 +542,12 @@ export class QuickOpenController extends Component implements IQuickOpenService 
 
 			// Pass to handlers
 			for (let prefix in this.mapResolvedHandlersToPrefix) {
-				if (this.mapResolvedHandlersToPrefix.hasOwnProperty(prefix)) {
-					const promise = this.mapResolvedHandlersToPrefix[prefix];
-					promise.then(handler => {
-						this.handlerOnOpenCalled[prefix] = false;
+				const promise = this.mapResolvedHandlersToPrefix[prefix];
+				promise.then(handler => {
+					this.handlerOnOpenCalled[prefix] = false;
 
-						handler.onClose(reason === HideReason.CANCELED); // Don't check if onOpen was called to preserve old behaviour for now
-					});
-				}
+					handler.onClose(reason === HideReason.CANCELED); // Don't check if onOpen was called to preserve old behaviour for now
+				});
 			}
 
 			// Complete promises that are waiting

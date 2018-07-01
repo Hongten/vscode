@@ -43,7 +43,6 @@ function patchProcess(allowExit: boolean) {
 }
 
 export function exit(code?: number) {
-	// TODO@electron
 	// See https://github.com/Microsoft/vscode/issues/32990
 	// calling process.exit() does not exit the process when the process is being debugged
 	// It waits for the debugger to disconnect, but in our version, the debugger does not

@@ -332,6 +332,11 @@ export abstract class EditorInput extends Disposable implements IEditorInput {
 	private disposed: boolean = false;
 
 	/**
+	 * Returns the unique type identifier of this input.
+	 */
+	abstract getTypeId(): string;
+
+	/**
 	 * Returns the associated resource of this input if any.
 	 */
 	getResource(): URI {
@@ -354,14 +359,13 @@ export abstract class EditorInput extends Disposable implements IEditorInput {
 		return null;
 	}
 
+	/**
+	 * Returns the title of this input that can be shown to the user. Examples include showing the title of
+	 * the input above the editor area as hover over the input label.
+	 */
 	getTitle(verbosity?: Verbosity): string {
 		return this.getName();
 	}
-
-	/**
-	 * Returns the unique type identifier of this input.
-	 */
-	abstract getTypeId(): string;
 
 	/**
 	 * Returns the preferred editor for this input. A list of candidate editors is passed in that whee registered
@@ -447,6 +451,13 @@ export abstract class EditorInput extends Disposable implements IEditorInput {
 	}
 
 	/**
+	 * Returns whether this input was disposed or not.
+	 */
+	isDisposed(): boolean {
+		return this.disposed;
+	}
+
+	/**
 	 * Called when an editor input is no longer needed. Allows to free up any resources taken by
 	 * resolving the editor input.
 	 */
@@ -455,13 +466,6 @@ export abstract class EditorInput extends Disposable implements IEditorInput {
 		this._onDispose.fire();
 
 		super.dispose();
-	}
-
-	/**
-	 * Returns whether this input was disposed or not.
-	 */
-	isDisposed(): boolean {
-		return this.disposed;
 	}
 }
 

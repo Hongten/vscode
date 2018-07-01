@@ -199,8 +199,6 @@ export class WorkspaceEditingService implements IWorkspaceEditingService {
 			if (result) {
 				return this.migrate(result.workspace).then(() => {
 
-					// TODO@Ben TODO@Sandeep the following requires ugly casts and should probably have a service interface
-
 					// Reinitialize backup service
 					if (this.backupFileService instanceof BackupFileService) {
 						this.backupFileService.initialize(result.backupPath);

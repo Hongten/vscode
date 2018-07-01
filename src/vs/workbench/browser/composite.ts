@@ -29,10 +29,14 @@ export abstract class Composite extends Component implements IComposite {
 	private readonly _onTitleAreaUpdate: Emitter<void> = this._register(new Emitter<void>());
 	get onTitleAreaUpdate(): Event<void> { return this._onTitleAreaUpdate.event; }
 
-	private readonly _onDidFocus: Emitter<void> = this._register(new Emitter<void>());
-	get onDidFocus(): Event<any> {
-		const focusTracker = this._register(trackFocus(this.getContainer()));
-		this._register(focusTracker.onDidFocus(() => this._onDidFocus.fire()));
+	private _onDidFocus: Emitter<void>;
+	get onDidFocus(): Event<void> {
+		if (!this._onDidFocus) {
+			this._onDidFocus = this._register(new Emitter<void>());
+
+			const focusTracker = this._register(trackFocus(this.getContainer()));
+			this._register(focusTracker.onDidFocus(() => this._onDidFocus.fire()));
+		}
 
 		return this._onDidFocus.event;
 	}
