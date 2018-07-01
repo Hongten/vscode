@@ -33,7 +33,7 @@ import { INotificationService } from 'vs/platform/notification/common/notificati
 
 export class StatusbarPart extends Part implements IStatusbarService {
 
-	public _serviceBrand: any;
+	_serviceBrand: any;
 
 	private static readonly PRIORITY_PROP = 'priority';
 	private static readonly ALIGNMENT_PROP = 'alignment';
@@ -55,10 +55,10 @@ export class StatusbarPart extends Part implements IStatusbarService {
 	}
 
 	private registerListeners(): void {
-		this.toUnbind.push(this.contextService.onDidChangeWorkbenchState(() => this.updateStyles()));
+		this._register(this.contextService.onDidChangeWorkbenchState(() => this.updateStyles()));
 	}
 
-	public addEntry(entry: IStatusbarEntry, alignment: StatusbarAlignment, priority: number = 0): IDisposable {
+	addEntry(entry: IStatusbarEntry, alignment: StatusbarAlignment, priority: number = 0): IDisposable {
 
 		// Render entry in status bar
 		const el = this.doCreateStatusItem(alignment, priority, entry.showBeak ? 'has-beak' : void 0);
@@ -112,7 +112,7 @@ export class StatusbarPart extends Part implements IStatusbarService {
 		return entries;
 	}
 
-	public createContentArea(parent: HTMLElement): HTMLElement {
+	createContentArea(parent: HTMLElement): HTMLElement {
 		this.statusItemsContainer = parent;
 
 		// Fill in initial items that were contributed from the registry
@@ -179,7 +179,7 @@ export class StatusbarPart extends Part implements IStatusbarService {
 		return el;
 	}
 
-	public setStatusMessage(message: string, autoDisposeAfter: number = -1, delayBy: number = 0): IDisposable {
+	setStatusMessage(message: string, autoDisposeAfter: number = -1, delayBy: number = 0): IDisposable {
 		if (this.statusMsgDispose) {
 			this.statusMsgDispose.dispose(); // dismiss any previous
 		}
@@ -238,7 +238,7 @@ class StatusBarEntryItem implements IStatusbarItem {
 		}
 	}
 
-	public render(el: HTMLElement): IDisposable {
+	render(el: HTMLElement): IDisposable {
 		let toDispose: IDisposable[] = [];
 		addClass(el, 'statusbar-entry');
 
@@ -324,7 +324,7 @@ class ManageExtensionAction extends Action {
 		super('statusbar.manage.extension', nls.localize('manageExtension', "Manage Extension"));
 	}
 
-	public run(extensionId: string): TPromise<any> {
+	run(extensionId: string): TPromise<any> {
 		return this.commandService.executeCommand('_extensions.manage', extensionId);
 	}
 }

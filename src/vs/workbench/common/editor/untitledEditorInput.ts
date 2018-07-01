@@ -28,14 +28,17 @@ import { IHashService } from 'vs/workbench/services/hash/common/hashService';
  */
 export class UntitledEditorInput extends EditorInput implements IEncodingSupport {
 
-	public static readonly ID: string = 'workbench.editors.untitledEditorInput';
+	static readonly ID: string = 'workbench.editors.untitledEditorInput';
 
 	private _hasAssociatedFilePath: boolean;
 	private cachedModel: UntitledEditorModel;
 	private modelResolve: TPromise<UntitledEditorModel>;
 
-	private readonly _onDidModelChangeContent: Emitter<void>;
-	private readonly _onDidModelChangeEncoding: Emitter<void>;
+	private readonly _onDidModelChangeContent: Emitter<void> = new Emitter<void>();
+	get onDidModelChangeContent(): Event<void> { return this._onDidModelChangeContent.event; }
+
+	private readonly _onDidModelChangeEncoding: Emitter<void> = new Emitter<void>();
+	get onDidModelChangeEncoding(): Event<void> { return this._onDidModelChangeEncoding.event; }
 
 	private toUnbind: IDisposable[];
 
@@ -55,32 +58,21 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 
 		this._hasAssociatedFilePath = hasAssociatedFilePath;
 		this.toUnbind = [];
-
-		this._onDidModelChangeContent = new Emitter<void>();
-		this._onDidModelChangeEncoding = new Emitter<void>();
 	}
 
-	public get hasAssociatedFilePath(): boolean {
+	get hasAssociatedFilePath(): boolean {
 		return this._hasAssociatedFilePath;
 	}
 
-	public get onDidModelChangeContent(): Event<void> {
-		return this._onDidModelChangeContent.event;
-	}
-
-	public get onDidModelChangeEncoding(): Event<void> {
-		return this._onDidModelChangeEncoding.event;
-	}
-
-	public getTypeId(): string {
+	getTypeId(): string {
 		return UntitledEditorInput.ID;
 	}
 
-	public getResource(): URI {
+	getResource(): URI {
 		return this.resource;
 	}
 
-	public getModeId(): string {
+	getModeId(): string {
 		if (this.cachedModel) {
 			return this.cachedModel.getModeId();
 		}
@@ -88,7 +80,7 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 		return this.modeId;
 	}
 
-	public getName(): string {
+	getName(): string {
 		return this.hasAssociatedFilePath ? resources.basenameOrAuthority(this.resource) : this.resource.path;
 	}
 
@@ -107,7 +99,7 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 		return labels.getPathLabel(resources.dirname(this.resource), this.environmentService);
 	}
 
-	public getDescription(verbosity: Verbosity = Verbosity.MEDIUM): string {
+	getDescription(verbosity: Verbosity = Verbosity.MEDIUM): string {
 		if (!this.hasAssociatedFilePath) {
 			return null;
 		}
@@ -144,7 +136,7 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 		return labels.getPathLabel(this.resource, this.environmentService);
 	}
 
-	public getTitle(verbosity: Verbosity): string {
+	getTitle(verbosity: Verbosity): string {
 		if (!this.hasAssociatedFilePath) {
 			return this.getName();
 		}
@@ -165,7 +157,7 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 		return title;
 	}
 
-	public isDirty(): boolean {
+	isDirty(): boolean {
 		if (this.cachedModel) {
 			return this.cachedModel.isDirty();
 		}
@@ -179,15 +171,15 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 		return this.hasAssociatedFilePath;
 	}
 
-	public confirmSave(): TPromise<ConfirmResult> {
+	confirmSave(): TPromise<ConfirmResult> {
 		return this.textFileService.confirmSave([this.resource]);
 	}
 
-	public save(): TPromise<boolean> {
+	save(): TPromise<boolean> {
 		return this.textFileService.save(this.resource);
 	}
 
-	public revert(): TPromise<boolean> {
+	revert(): TPromise<boolean> {
 		if (this.cachedModel) {
 			this.cachedModel.revert();
 		}
@@ -197,7 +189,7 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 		return TPromise.as(true);
 	}
 
-	public suggestFileName(): string {
+	suggestFileName(): string {
 		if (!this.hasAssociatedFilePath) {
 			if (this.cachedModel) {
 				const modeId = this.cachedModel.getModeId();
@@ -210,7 +202,7 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 		return this.getName();
 	}
 
-	public getEncoding(): string {
+	getEncoding(): string {
 		if (this.cachedModel) {
 			return this.cachedModel.getEncoding();
 		}
@@ -218,7 +210,7 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 		return this.preferredEncoding;
 	}
 
-	public setEncoding(encoding: string, mode: EncodingMode /* ignored, we only have Encode */): void {
+	setEncoding(encoding: string, mode: EncodingMode /* ignored, we only have Encode */): void {
 		this.preferredEncoding = encoding;
 
 		if (this.cachedModel) {
@@ -226,7 +218,7 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 		}
 	}
 
-	public resolve(): TPromise<UntitledEditorModel> {
+	resolve(): TPromise<UntitledEditorModel> {
 
 		// Join a model resolve if we have had one before
 		if (this.modelResolve) {
@@ -251,7 +243,7 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 		return model;
 	}
 
-	public getTelemetryDescriptor(): object {
+	getTelemetryDescriptor(): object {
 		const descriptor = super.getTelemetryDescriptor();
 		descriptor['resource'] = telemetryURIDescriptor(this.getResource(), path => this.hashService.createSHA1(path));
 
@@ -263,7 +255,7 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 		return descriptor;
 	}
 
-	public matches(otherInput: any): boolean {
+	matches(otherInput: any): boolean {
 		if (super.matches(otherInput) === true) {
 			return true;
 		}
@@ -278,7 +270,7 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 		return false;
 	}
 
-	public dispose(): void {
+	dispose(): void {
 		this._onDidModelChangeContent.dispose();
 		this._onDidModelChangeEncoding.dispose();
 

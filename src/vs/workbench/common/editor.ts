@@ -319,45 +319,22 @@ export interface IEditorInput extends IDisposable {
  * Each editor input is mapped to an editor that is capable of opening it through the Platform facade.
  */
 export abstract class EditorInput implements IEditorInput {
-	private readonly _onDispose: Emitter<void>;
-	protected _onDidChangeDirty: Emitter<void>;
-	protected _onDidChangeLabel: Emitter<void>;
 
-	private disposed: boolean;
+	protected readonly _onDidChangeDirty: Emitter<void> = new Emitter<void>();
+	get onDidChangeDirty(): Event<void> { return this._onDidChangeDirty.event; }
 
-	constructor() {
-		this._onDidChangeDirty = new Emitter<void>();
-		this._onDidChangeLabel = new Emitter<void>();
-		this._onDispose = new Emitter<void>();
+	protected readonly _onDidChangeLabel: Emitter<void> = new Emitter<void>();
+	get onDidChangeLabel(): Event<void> { return this._onDidChangeLabel.event; }
 
-		this.disposed = false;
-	}
+	private readonly _onDispose: Emitter<void> = new Emitter<void>();
+	get onDispose(): Event<void> { return this._onDispose.event; }
 
-	/**
-	 * Fired when the dirty state of this input changes.
-	 */
-	public get onDidChangeDirty(): Event<void> {
-		return this._onDidChangeDirty.event;
-	}
-
-	/**
-	 * Fired when the label this input changes.
-	 */
-	public get onDidChangeLabel(): Event<void> {
-		return this._onDidChangeLabel.event;
-	}
-
-	/**
-	 * Fired when the model gets disposed.
-	 */
-	public get onDispose(): Event<void> {
-		return this._onDispose.event;
-	}
+	private disposed: boolean = false;
 
 	/**
 	 * Returns the associated resource of this input if any.
 	 */
-	public getResource(): URI {
+	getResource(): URI {
 		return null;
 	}
 
@@ -365,7 +342,7 @@ export abstract class EditorInput implements IEditorInput {
 	 * Returns the name of this input that can be shown to the user. Examples include showing the name of the input
 	 * above the editor area when the input is shown.
 	 */
-	public getName(): string {
+	getName(): string {
 		return null;
 	}
 
@@ -373,24 +350,24 @@ export abstract class EditorInput implements IEditorInput {
 	 * Returns the description of this input that can be shown to the user. Examples include showing the description of
 	 * the input above the editor area to the side of the name of the input.
 	 */
-	public getDescription(verbosity?: Verbosity): string {
+	getDescription(verbosity?: Verbosity): string {
 		return null;
 	}
 
-	public getTitle(verbosity?: Verbosity): string {
+	getTitle(verbosity?: Verbosity): string {
 		return this.getName();
 	}
 
 	/**
 	 * Returns the unique type identifier of this input.
 	 */
-	public abstract getTypeId(): string;
+	abstract getTypeId(): string;
 
 	/**
 	 * Returns the preferred editor for this input. A list of candidate editors is passed in that whee registered
 	 * for the input. This allows subclasses to decide late which editor to use for the input on a case by case basis.
 	 */
-	public getPreferredEditorId(candidates: string[]): string {
+	getPreferredEditorId(candidates: string[]): string {
 		if (candidates && candidates.length > 0) {
 			return candidates[0];
 		}
@@ -403,7 +380,7 @@ export abstract class EditorInput implements IEditorInput {
 	 *
 	 * Subclasses should extend if they can contribute.
 	 */
-	public getTelemetryDescriptor(): object {
+	getTelemetryDescriptor(): object {
 		/* __GDPR__FRAGMENT__
 			"EditorTelemetryDescriptor" : {
 				"typeId" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
@@ -418,54 +395,54 @@ export abstract class EditorInput implements IEditorInput {
 	 * if the EditorModel should be refreshed before returning it. Depending on the implementation
 	 * this could mean to refresh the editor model contents with the version from disk.
 	 */
-	public abstract resolve(refresh?: boolean): TPromise<IEditorModel>;
+	abstract resolve(refresh?: boolean): TPromise<IEditorModel>;
 
 	/**
 	 * An editor that is dirty will be asked to be saved once it closes.
 	 */
-	public isDirty(): boolean {
+	isDirty(): boolean {
 		return false;
 	}
 
 	/**
 	 * Subclasses should bring up a proper dialog for the user if the editor is dirty and return the result.
 	 */
-	public confirmSave(): TPromise<ConfirmResult> {
+	confirmSave(): TPromise<ConfirmResult> {
 		return TPromise.wrap(ConfirmResult.DONT_SAVE);
 	}
 
 	/**
 	 * Saves the editor if it is dirty. Subclasses return a promise with a boolean indicating the success of the operation.
 	 */
-	public save(): TPromise<boolean> {
+	save(): TPromise<boolean> {
 		return TPromise.as(true);
 	}
 
 	/**
 	 * Reverts the editor if it is dirty. Subclasses return a promise with a boolean indicating the success of the operation.
 	 */
-	public revert(options?: IRevertOptions): TPromise<boolean> {
+	revert(options?: IRevertOptions): TPromise<boolean> {
 		return TPromise.as(true);
 	}
 
 	/**
 	 * Called when this input is no longer opened in any editor. Subclasses can free resources as needed.
 	 */
-	public close(): void {
+	close(): void {
 		this.dispose();
 	}
 
 	/**
 	 * Subclasses can set this to false if it does not make sense to split the editor input.
 	 */
-	public supportsSplitEditor(): boolean {
+	supportsSplitEditor(): boolean {
 		return true;
 	}
 
 	/**
 	 * Returns true if this input is identical to the otherInput.
 	 */
-	public matches(otherInput: any): boolean {
+	matches(otherInput: any): boolean {
 		return this === otherInput;
 	}
 
@@ -473,7 +450,7 @@ export abstract class EditorInput implements IEditorInput {
 	 * Called when an editor input is no longer needed. Allows to free up any resources taken by
 	 * resolving the editor input.
 	 */
-	public dispose(): void {
+	dispose(): void {
 		this.disposed = true;
 		this._onDispose.fire();
 
@@ -485,7 +462,7 @@ export abstract class EditorInput implements IEditorInput {
 	/**
 	 * Returns whether this input was disposed or not.
 	 */
-	public isDisposed(): boolean {
+	isDisposed(): boolean {
 		return this.disposed;
 	}
 }
@@ -544,7 +521,7 @@ export interface IFileEditorInput extends IEditorInput, IEncodingSupport {
  */
 export class SideBySideEditorInput extends EditorInput {
 
-	public static readonly ID: string = 'workbench.editorinputs.sidebysideEditorInput';
+	static readonly ID: string = 'workbench.editorinputs.sidebysideEditorInput';
 
 	private _toUnbind: IDisposable[];
 
@@ -562,23 +539,23 @@ export class SideBySideEditorInput extends EditorInput {
 		return this._details;
 	}
 
-	public isDirty(): boolean {
+	isDirty(): boolean {
 		return this.master.isDirty();
 	}
 
-	public confirmSave(): TPromise<ConfirmResult> {
+	confirmSave(): TPromise<ConfirmResult> {
 		return this.master.confirmSave();
 	}
 
-	public save(): TPromise<boolean> {
+	save(): TPromise<boolean> {
 		return this.master.save();
 	}
 
-	public revert(): TPromise<boolean> {
+	revert(): TPromise<boolean> {
 		return this.master.revert();
 	}
 
-	public getTelemetryDescriptor(): object {
+	getTelemetryDescriptor(): object {
 		const descriptor = this.master.getTelemetryDescriptor();
 		return objects.assign(descriptor, super.getTelemetryDescriptor());
 	}
@@ -605,11 +582,11 @@ export class SideBySideEditorInput extends EditorInput {
 		this._toUnbind.push(this.master.onDidChangeLabel(() => this._onDidChangeLabel.fire()));
 	}
 
-	public get toUnbind() {
+	get toUnbind() {
 		return this._toUnbind;
 	}
 
-	public resolve(refresh?: boolean): TPromise<EditorModel> {
+	resolve(refresh?: boolean): TPromise<EditorModel> {
 		return TPromise.as(null);
 	}
 
@@ -617,15 +594,15 @@ export class SideBySideEditorInput extends EditorInput {
 		return SideBySideEditorInput.ID;
 	}
 
-	public getName(): string {
+	getName(): string {
 		return this.name;
 	}
 
-	public getDescription(): string {
+	getDescription(): string {
 		return this.description;
 	}
 
-	public matches(otherInput: any): boolean {
+	matches(otherInput: any): boolean {
 		if (super.matches(otherInput) === true) {
 			return true;
 		}
@@ -642,7 +619,7 @@ export class SideBySideEditorInput extends EditorInput {
 		return false;
 	}
 
-	public dispose(): void {
+	dispose(): void {
 		this._toUnbind = dispose(this._toUnbind);
 		super.dispose();
 	}
@@ -658,40 +635,30 @@ export interface ITextEditorModel extends IEditorModel {
  * are typically cached for some while because they are expensive to construct.
  */
 export class EditorModel extends Disposable implements IEditorModel {
-	private readonly _onDispose: Emitter<void>;
 
-	constructor() {
-		super();
-		this._onDispose = new Emitter<void>();
-	}
-
-	/**
-	 * Fired when the model gets disposed.
-	 */
-	public get onDispose(): Event<void> {
-		return this._onDispose.event;
-	}
+	private readonly _onDispose: Emitter<void> = this._register(new Emitter<void>());
+	get onDispose(): Event<void> { return this._onDispose.event; }
 
 	/**
 	 * Causes this model to load returning a promise when loading is completed.
 	 */
-	public load(): TPromise<EditorModel> {
+	load(): TPromise<EditorModel> {
 		return TPromise.as(this);
 	}
 
 	/**
 	 * Returns whether this model was loaded or not.
 	 */
-	public isResolved(): boolean {
+	isResolved(): boolean {
 		return true;
 	}
 
 	/**
 	 * Subclasses should implement to free resources that have been claimed through loading.
 	 */
-	public dispose(): void {
+	dispose(): void {
 		this._onDispose.fire();
-		this._onDispose.dispose();
+
 		super.dispose();
 	}
 }
@@ -715,7 +682,7 @@ export class EditorOptions implements IEditorOptions {
 	/**
 	 * Helper to create EditorOptions inline.
 	 */
-	public static create(settings: IEditorOptions): EditorOptions {
+	static create(settings: IEditorOptions): EditorOptions {
 		const options = new EditorOptions();
 
 		options.preserveFocus = settings.preserveFocus;
@@ -733,41 +700,41 @@ export class EditorOptions implements IEditorOptions {
 	 * Tells the editor to not receive keyboard focus when the editor is being opened. By default,
 	 * the editor will receive keyboard focus on open.
 	 */
-	public preserveFocus: boolean;
+	preserveFocus: boolean;
 
 	/**
 	 * Tells the editor to replace the editor input in the editor even if it is identical to the one
 	 * already showing. By default, the editor will not replace the input if it is identical to the
 	 * one showing.
 	 */
-	public forceOpen: boolean;
+	forceOpen: boolean;
 
 	/**
 	 * Will reveal the editor if it is already opened and visible in any of the opened editor groups.
 	 */
-	public revealIfVisible: boolean;
+	revealIfVisible: boolean;
 
 	/**
 	 * Will reveal the editor if it is already opened (even when not visible) in any of the opened editor groups.
 	 */
-	public revealIfOpened: boolean;
+	revealIfOpened: boolean;
 
 	/**
 	 * An editor that is pinned remains in the editor stack even when another editor is being opened.
 	 * An editor that is not pinned will always get replaced by another editor that is not pinned.
 	 */
-	public pinned: boolean;
+	pinned: boolean;
 
 	/**
 	 * The index in the document stack where to insert the editor into when opening.
 	 */
-	public index: number;
+	index: number;
 
 	/**
 	 * An active editor that is opened will show its contents directly. Set to true to open an editor
 	 * in the background.
 	 */
-	public inactive: boolean;
+	inactive: boolean;
 }
 
 /**
@@ -782,7 +749,7 @@ export class TextEditorOptions extends EditorOptions {
 	private revealInCenterIfOutsideViewport: boolean;
 	private editorViewState: IEditorViewState;
 
-	public static from(input?: IBaseResourceInput): TextEditorOptions {
+	static from(input?: IBaseResourceInput): TextEditorOptions {
 		if (!input || !input.options) {
 			return null;
 		}
@@ -793,7 +760,7 @@ export class TextEditorOptions extends EditorOptions {
 	/**
 	 * Helper to convert options bag to real class
 	 */
-	public static create(options: ITextEditorOptions = Object.create(null)): TextEditorOptions {
+	static create(options: ITextEditorOptions = Object.create(null)): TextEditorOptions {
 		const textEditorOptions = new TextEditorOptions();
 
 		if (options.selection) {
@@ -843,14 +810,14 @@ export class TextEditorOptions extends EditorOptions {
 	/**
 	 * Returns if this options object has objects defined for the editor.
 	 */
-	public hasOptionsDefined(): boolean {
+	hasOptionsDefined(): boolean {
 		return !!this.editorViewState || (!types.isUndefinedOrNull(this.startLineNumber) && !types.isUndefinedOrNull(this.startColumn));
 	}
 
 	/**
 	 * Tells the editor to set show the given selection when the editor is being opened.
 	 */
-	public selection(startLineNumber: number, startColumn: number, endLineNumber: number = startLineNumber, endColumn: number = startColumn): EditorOptions {
+	selection(startLineNumber: number, startColumn: number, endLineNumber: number = startLineNumber, endColumn: number = startColumn): EditorOptions {
 		this.startLineNumber = startLineNumber;
 		this.startColumn = startColumn;
 		this.endLineNumber = endLineNumber;
@@ -862,7 +829,7 @@ export class TextEditorOptions extends EditorOptions {
 	/**
 	 * Create a TextEditorOptions inline to be used when the editor is opening.
 	 */
-	public static fromEditor(editor: ICodeEditor, settings?: IEditorOptions): TextEditorOptions {
+	static fromEditor(editor: ICodeEditor, settings?: IEditorOptions): TextEditorOptions {
 		const options = TextEditorOptions.create(settings);
 
 		// View state
@@ -876,7 +843,7 @@ export class TextEditorOptions extends EditorOptions {
 	 *
 	 * @return if something was applied
 	 */
-	public apply(editor: ICodeEditor, scrollType: ScrollType): boolean {
+	apply(editor: ICodeEditor, scrollType: ScrollType): boolean {
 
 		// View state
 		return this.applyViewState(editor, scrollType);
@@ -1057,10 +1024,7 @@ class EditorInputFactoryRegistry implements IEditorInputFactoryRegistry {
 	private editorInputFactoryConstructors: { [editorInputId: string]: IConstructorSignature0<IEditorInputFactory> } = Object.create(null);
 	private editorInputFactoryInstances: { [editorInputId: string]: IEditorInputFactory } = Object.create(null);
 
-	constructor() {
-	}
-
-	public setInstantiationService(service: IInstantiationService): void {
+	setInstantiationService(service: IInstantiationService): void {
 		this.instantiationService = service;
 
 		for (let key in this.editorInputFactoryConstructors) {
@@ -1076,15 +1040,15 @@ class EditorInputFactoryRegistry implements IEditorInputFactoryRegistry {
 		this.editorInputFactoryInstances[editorInputId] = instance;
 	}
 
-	public registerFileInputFactory(factory: IFileInputFactory): void {
+	registerFileInputFactory(factory: IFileInputFactory): void {
 		this.fileInputFactory = factory;
 	}
 
-	public getFileInputFactory(): IFileInputFactory {
+	getFileInputFactory(): IFileInputFactory {
 		return this.fileInputFactory;
 	}
 
-	public registerEditorInputFactory(editorInputId: string, ctor: IConstructorSignature0<IEditorInputFactory>): void {
+	registerEditorInputFactory(editorInputId: string, ctor: IConstructorSignature0<IEditorInputFactory>): void {
 		if (!this.instantiationService) {
 			this.editorInputFactoryConstructors[editorInputId] = ctor;
 		} else {
@@ -1092,7 +1056,7 @@ class EditorInputFactoryRegistry implements IEditorInputFactoryRegistry {
 		}
 	}
 
-	public getEditorInputFactory(editorInputId: string): IEditorInputFactory {
+	getEditorInputFactory(editorInputId: string): IEditorInputFactory {
 		return this.editorInputFactoryInstances[editorInputId];
 	}
 }

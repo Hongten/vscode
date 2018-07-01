@@ -38,7 +38,7 @@ export class NotificationsList extends Themable {
 		this.viewModel = [];
 	}
 
-	public show(focus?: boolean): void {
+	show(focus?: boolean): void {
 		if (this.isVisible) {
 			if (focus) {
 				this.list.domFocus();
@@ -126,7 +126,7 @@ export class NotificationsList extends Themable {
 		this.updateStyles();
 	}
 
-	public updateNotificationsList(start: number, deleteCount: number, items: INotificationViewItem[] = []) {
+	updateNotificationsList(start: number, deleteCount: number, items: INotificationViewItem[] = []) {
 		const listHasDOMFocus = isAncestor(document.activeElement, this.listContainer);
 
 		// Remember focus and relative top of that item
@@ -177,7 +177,7 @@ export class NotificationsList extends Themable {
 		}
 	}
 
-	public hide(): void {
+	hide(): void {
 		if (!this.isVisible || !this.list) {
 			return; // already hidden
 		}
@@ -192,7 +192,7 @@ export class NotificationsList extends Themable {
 		this.viewModel = [];
 	}
 
-	public focusFirst(): void {
+	focusFirst(): void {
 		if (!this.isVisible || !this.list) {
 			return; // hidden
 		}
@@ -201,7 +201,7 @@ export class NotificationsList extends Themable {
 		this.list.domFocus();
 	}
 
-	public hasFocus(): boolean {
+	hasFocus(): boolean {
 		if (!this.isVisible || !this.list) {
 			return false; // hidden
 		}
@@ -222,7 +222,7 @@ export class NotificationsList extends Themable {
 		}
 	}
 
-	public layout(width: number, maxHeight?: number): void {
+	layout(width: number, maxHeight?: number): void {
 		if (this.list) {
 			this.listContainer.style.width = `${width}px`;
 
@@ -234,7 +234,7 @@ export class NotificationsList extends Themable {
 		}
 	}
 
-	public dispose(): void {
+	dispose(): void {
 		this.hide();
 
 		super.dispose();
