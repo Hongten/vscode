@@ -67,47 +67,43 @@ export class NotificationsList extends Themable {
 		this.listContainer = document.createElement('div');
 		addClass(this.listContainer, 'notifications-list-container');
 
-		const actionRunner = this.instantiationService.createInstance(NotificationActionRunner);
-		this.toUnbind.push(actionRunner);
+		const actionRunner = this._register(this.instantiationService.createInstance(NotificationActionRunner));
 
 		// Notification Renderer
 		const renderer = this.instantiationService.createInstance(NotificationRenderer, actionRunner);
 
 		// List
-		this.list = <WorkbenchList<INotificationViewItem>>this.instantiationService.createInstance(
+		this.list = this._register(<WorkbenchList<INotificationViewItem>>this.instantiationService.createInstance(
 			WorkbenchList,
 			this.listContainer,
 			new NotificationsListDelegate(this.listContainer),
 			[renderer],
 			this.options
-		);
-		this.toUnbind.push(this.list);
+		));
 
 		// Context menu to copy message
-		const copyAction = this.instantiationService.createInstance(CopyNotificationMessageAction, CopyNotificationMessageAction.ID, CopyNotificationMessageAction.LABEL);
-		this.toUnbind.push(copyAction);
-		this.toUnbind.push(this.list.onContextMenu(e => {
+		const copyAction = this._register(this.instantiationService.createInstance(CopyNotificationMessageAction, CopyNotificationMessageAction.ID, CopyNotificationMessageAction.LABEL));
+		this._register((this.list.onContextMenu(e => {
 			this.contextMenuService.showContextMenu({
 				getAnchor: () => e.anchor,
 				getActions: () => TPromise.as([copyAction]),
 				getActionsContext: () => e.element,
 				actionRunner
 			});
-		}));
+		})));
 
 		// Toggle on double click
-		this.toUnbind.push(this.list.onMouseDblClick(event => (event.element as INotificationViewItem).toggle()));
+		this._register((this.list.onMouseDblClick(event => (event.element as INotificationViewItem).toggle())));
 
 		// Clear focus when DOM focus moves out
 		// Use document.hasFocus() to not clear the focus when the entire window lost focus
 		// This ensures that when the focus comes back, the notifciation is still focused
-		const listFocusTracker = trackFocus(this.list.getHTMLElement());
-		listFocusTracker.onDidBlur(() => {
+		const listFocusTracker = this._register(trackFocus(this.list.getHTMLElement()));
+		this._register(listFocusTracker.onDidBlur(() => {
 			if (document.hasFocus()) {
 				this.list.setFocus([]);
 			}
-		});
-		this.toUnbind.push(listFocusTracker);
+		}));
 
 		// Context key
 		NotificationFocusedContext.bindTo(this.list.contextKeyService);
@@ -115,7 +111,7 @@ export class NotificationsList extends Themable {
 		// Only allow for focus in notifications, as the
 		// selection is too strong over the contents of
 		// the notification
-		this.toUnbind.push(this.list.onSelectionChange(e => {
+		this._register(this.list.onSelectionChange(e => {
 			if (e.indexes.length > 0) {
 				this.list.setSelection([]);
 			}

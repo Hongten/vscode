@@ -40,7 +40,7 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 	private readonly _onDidModelChangeEncoding: Emitter<void> = new Emitter<void>();
 	get onDidModelChangeEncoding(): Event<void> { return this._onDidModelChangeEncoding.event; }
 
-	private toUnbind: IDisposable[];
+	private toDispose: IDisposable[] = [];
 
 	constructor(
 		private resource: URI,
@@ -57,7 +57,6 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 		super();
 
 		this._hasAssociatedFilePath = hasAssociatedFilePath;
-		this.toUnbind = [];
 	}
 
 	get hasAssociatedFilePath(): boolean {
@@ -236,9 +235,9 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 		const model = this.instantiationService.createInstance(UntitledEditorModel, this.modeId, this.resource, this.hasAssociatedFilePath, this.initialValue, this.preferredEncoding);
 
 		// re-emit some events from the model
-		this.toUnbind.push(model.onDidChangeContent(() => this._onDidModelChangeContent.fire()));
-		this.toUnbind.push(model.onDidChangeDirty(() => this._onDidChangeDirty.fire()));
-		this.toUnbind.push(model.onDidChangeEncoding(() => this._onDidModelChangeEncoding.fire()));
+		this.toDispose.push(model.onDidChangeContent(() => this._onDidModelChangeContent.fire()));
+		this.toDispose.push(model.onDidChangeDirty(() => this._onDidChangeDirty.fire()));
+		this.toDispose.push(model.onDidChangeEncoding(() => this._onDidModelChangeEncoding.fire()));
 
 		return model;
 	}
@@ -275,7 +274,7 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 		this._onDidModelChangeEncoding.dispose();
 
 		// Listeners
-		dispose(this.toUnbind);
+		dispose(this.toDispose);
 
 		// Model
 		if (this.cachedModel) {

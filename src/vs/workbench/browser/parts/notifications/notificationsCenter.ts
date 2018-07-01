@@ -58,7 +58,7 @@ export class NotificationsCenter extends Themable {
 	}
 
 	private registerListeners(): void {
-		this.toUnbind.push(this.model.onDidNotificationChange(e => this.onDidNotificationChange(e)));
+		this._register(this.model.onDidNotificationChange(e => this.onDidNotificationChange(e)));
 	}
 
 	get isVisible(): boolean {
@@ -133,21 +133,17 @@ export class NotificationsCenter extends Themable {
 		addClass(toolbarContainer, 'notifications-center-header-toolbar');
 		this.notificationsCenterHeader.appendChild(toolbarContainer);
 
-		const actionRunner = this.instantiationService.createInstance(NotificationActionRunner);
-		this.toUnbind.push(actionRunner);
+		const actionRunner = this._register(this.instantiationService.createInstance(NotificationActionRunner));
 
-		const notificationsToolBar = new ActionBar(toolbarContainer, {
+		const notificationsToolBar = this._register(new ActionBar(toolbarContainer, {
 			ariaLabel: localize('notificationsToolbar', "Notification Center Actions"),
 			actionRunner
-		});
-		this.toUnbind.push(notificationsToolBar);
+		}));
 
-		const hideAllAction = this.instantiationService.createInstance(HideNotificationsCenterAction, HideNotificationsCenterAction.ID, HideNotificationsCenterAction.LABEL);
-		this.toUnbind.push(hideAllAction);
+		const hideAllAction = this._register(this.instantiationService.createInstance(HideNotificationsCenterAction, HideNotificationsCenterAction.ID, HideNotificationsCenterAction.LABEL));
 		notificationsToolBar.push(hideAllAction, { icon: true, label: false, keybinding: this.getKeybindingLabel(hideAllAction) });
 
-		const clearAllAction = this.instantiationService.createInstance(ClearAllNotificationsAction, ClearAllNotificationsAction.ID, ClearAllNotificationsAction.LABEL);
-		this.toUnbind.push(clearAllAction);
+		const clearAllAction = this._register(this.instantiationService.createInstance(ClearAllNotificationsAction, ClearAllNotificationsAction.ID, ClearAllNotificationsAction.LABEL));
 		notificationsToolBar.push(clearAllAction, { icon: true, label: false, keybinding: this.getKeybindingLabel(clearAllAction) });
 
 		// Notifications List

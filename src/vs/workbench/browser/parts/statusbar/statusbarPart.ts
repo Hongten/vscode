@@ -122,16 +122,13 @@ export class StatusbarPart extends Part implements IStatusbarService {
 		const rightDescriptors = registry.items.filter(d => d.alignment === StatusbarAlignment.RIGHT).sort((a, b) => a.priority - b.priority);
 
 		const descriptors = rightDescriptors.concat(leftDescriptors); // right first because they float
-
-		this.toUnbind.push(...descriptors.map(descriptor => {
+		descriptors.forEach(descriptor => {
 			const item = this.instantiationService.createInstance(descriptor.syncDescriptor);
 			const el = this.doCreateStatusItem(descriptor.alignment, descriptor.priority);
 
-			const dispose = item.render(el);
+			this._register(item.render(el));
 			this.statusItemsContainer.appendChild(el);
-
-			return dispose;
-		}));
+		});
 
 		return this.statusItemsContainer;
 	}

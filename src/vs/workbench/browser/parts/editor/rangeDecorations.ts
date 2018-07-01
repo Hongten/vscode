@@ -26,20 +26,20 @@ export class RangeHighlightDecorations implements IDisposable {
 	private editorDisposables: IDisposable[] = [];
 
 	private readonly _onHighlightRemoved: Emitter<void> = new Emitter<void>();
-	public readonly onHighlghtRemoved: Event<void> = this._onHighlightRemoved.event;
+	readonly onHighlghtRemoved: Event<void> = this._onHighlightRemoved.event;
 
-	constructor(@IEditorService private editorService: IEditorService) {
-	}
+	constructor(@IEditorService private editorService: IEditorService) { }
 
-	public removeHighlightRange() {
+	removeHighlightRange() {
 		if (this.editor && this.editor.getModel() && this.rangeHighlightDecorationId) {
 			this.editor.deltaDecorations([this.rangeHighlightDecorationId], []);
 			this._onHighlightRemoved.fire();
 		}
+
 		this.rangeHighlightDecorationId = null;
 	}
 
-	public highlightRange(range: IRangeHighlightDecoration, editor?: ICodeEditor) {
+	highlightRange(range: IRangeHighlightDecoration, editor?: ICodeEditor) {
 		editor = editor ? editor : this.getEditor(range);
 		if (editor) {
 			this.doHighlightRange(editor, range);
@@ -48,9 +48,11 @@ export class RangeHighlightDecorations implements IDisposable {
 
 	private doHighlightRange(editor: ICodeEditor, selectionRange: IRangeHighlightDecoration) {
 		this.removeHighlightRange();
+
 		editor.changeDecorations((changeAccessor: IModelDecorationsChangeAccessor) => {
 			this.rangeHighlightDecorationId = changeAccessor.addDecoration(selectionRange.range, this.createRangeHighlightDecoration(selectionRange.isWholeLine));
 		});
+
 		this.setEditor(editor);
 	}
 
@@ -62,6 +64,7 @@ export class RangeHighlightDecorations implements IDisposable {
 				return this.editorService.activeTextEditorWidget as ICodeEditor;
 			}
 		}
+
 		return null;
 	}
 
@@ -107,7 +110,9 @@ export class RangeHighlightDecorations implements IDisposable {
 		return (isWholeLine ? RangeHighlightDecorations._WHOLE_LINE_RANGE_HIGHLIGHT : RangeHighlightDecorations._RANGE_HIGHLIGHT);
 	}
 
-	public dispose() {
+	dispose() {
+		this._onHighlightRemoved.dispose();
+
 		if (this.editor && this.editor.getModel()) {
 			this.removeHighlightRange();
 			this.disposeEditorListeners();

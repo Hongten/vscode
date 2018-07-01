@@ -171,7 +171,6 @@ export abstract class BaseEditor extends Panel implements IEditor {
 		this._input = null;
 		this._options = null;
 
-		// Super Dispose
 		super.dispose();
 	}
 }
