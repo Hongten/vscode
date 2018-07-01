@@ -66,7 +66,7 @@ export class OutputPanel extends AbstractTextResourceEditor {
 			];
 
 			this.actions.forEach(a => {
-				this.toUnbind.push(a);
+				this._register(a);
 			});
 		}
 
@@ -135,7 +135,7 @@ export class OutputPanel extends AbstractTextResourceEditor {
 	protected createEditor(parent: HTMLElement): void {
 		// First create the scoped instantation service and only then construct the editor using the scoped service
 		const scopedContextKeyService = this.contextKeyService.createScoped(parent);
-		this.toUnbind.push(scopedContextKeyService);
+		this._register(scopedContextKeyService);
 		this.scopedInstantiationService = this.instantiationService.createChild(new ServiceCollection([IContextKeyService, scopedContextKeyService]));
 		super.createEditor(parent);
 

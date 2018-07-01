@@ -35,7 +35,7 @@ export class FileEditorInput extends EditorInput implements IFileEditorInput {
 	private forceOpenAsText: boolean;
 	private textModelReference: TPromise<IReference<ITextEditorModel>>;
 	private name: string;
-	private toUnbind: IDisposable[];
+	private toDispose: IDisposable[] = [];
 
 	/**
 	 * An editor input who's contents are retrieved from file services.
@@ -52,8 +52,6 @@ export class FileEditorInput extends EditorInput implements IFileEditorInput {
 	) {
 		super();
 
-		this.toUnbind = [];
-
 		this.setPreferredEncoding(preferredEncoding);
 
 		this.registerListeners();
@@ -62,11 +60,11 @@ export class FileEditorInput extends EditorInput implements IFileEditorInput {
 	private registerListeners(): void {
 
 		// Model changes
-		this.toUnbind.push(this.textFileService.models.onModelDirty(e => this.onDirtyStateChange(e)));
-		this.toUnbind.push(this.textFileService.models.onModelSaveError(e => this.onDirtyStateChange(e)));
-		this.toUnbind.push(this.textFileService.models.onModelSaved(e => this.onDirtyStateChange(e)));
-		this.toUnbind.push(this.textFileService.models.onModelReverted(e => this.onDirtyStateChange(e)));
-		this.toUnbind.push(this.textFileService.models.onModelOrphanedChanged(e => this.onModelOrphanedChanged(e)));
+		this.toDispose.push(this.textFileService.models.onModelDirty(e => this.onDirtyStateChange(e)));
+		this.toDispose.push(this.textFileService.models.onModelSaveError(e => this.onDirtyStateChange(e)));
+		this.toDispose.push(this.textFileService.models.onModelSaved(e => this.onDirtyStateChange(e)));
+		this.toDispose.push(this.textFileService.models.onModelReverted(e => this.onDirtyStateChange(e)));
+		this.toDispose.push(this.textFileService.models.onModelOrphanedChanged(e => this.onModelOrphanedChanged(e)));
 	}
 
 	private onDirtyStateChange(e: TextFileModelChangeEvent): void {
@@ -312,7 +310,7 @@ export class FileEditorInput extends EditorInput implements IFileEditorInput {
 		}
 
 		// Listeners
-		this.toUnbind = dispose(this.toUnbind);
+		this.toDispose = dispose(this.toDispose);
 
 		super.dispose();
 	}

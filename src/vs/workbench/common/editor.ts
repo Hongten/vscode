@@ -523,11 +523,11 @@ export class SideBySideEditorInput extends EditorInput {
 
 	static readonly ID: string = 'workbench.editorinputs.sidebysideEditorInput';
 
-	private _toUnbind: IDisposable[];
+	private toDispose: IDisposable[] = [];
 
 	constructor(private name: string, private description: string, private _details: EditorInput, private _master: EditorInput) {
 		super();
-		this._toUnbind = [];
+
 		this.registerListeners();
 	}
 
@@ -564,26 +564,22 @@ export class SideBySideEditorInput extends EditorInput {
 
 		// When the details or master input gets disposed, dispose this diff editor input
 		const onceDetailsDisposed = once(this.details.onDispose);
-		this._toUnbind.push(onceDetailsDisposed(() => {
+		this.toDispose.push(onceDetailsDisposed(() => {
 			if (!this.isDisposed()) {
 				this.dispose();
 			}
 		}));
 
 		const onceMasterDisposed = once(this.master.onDispose);
-		this._toUnbind.push(onceMasterDisposed(() => {
+		this.toDispose.push(onceMasterDisposed(() => {
 			if (!this.isDisposed()) {
 				this.dispose();
 			}
 		}));
 
 		// Reemit some events from the master side to the outside
-		this._toUnbind.push(this.master.onDidChangeDirty(() => this._onDidChangeDirty.fire()));
-		this._toUnbind.push(this.master.onDidChangeLabel(() => this._onDidChangeLabel.fire()));
-	}
-
-	get toUnbind() {
-		return this._toUnbind;
+		this.toDispose.push(this.master.onDidChangeDirty(() => this._onDidChangeDirty.fire()));
+		this.toDispose.push(this.master.onDidChangeLabel(() => this._onDidChangeLabel.fire()));
 	}
 
 	resolve(refresh?: boolean): TPromise<EditorModel> {
@@ -620,7 +616,7 @@ export class SideBySideEditorInput extends EditorInput {
 	}
 
 	dispose(): void {
-		this._toUnbind = dispose(this._toUnbind);
+		this.toDispose = dispose(this.toDispose);
 		super.dispose();
 	}
 }

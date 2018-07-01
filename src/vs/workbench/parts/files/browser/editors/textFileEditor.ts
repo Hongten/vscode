@@ -59,7 +59,7 @@ export class TextFileEditor extends BaseTextEditor {
 		super(TextFileEditor.ID, telemetryService, instantiationService, storageService, configurationService, themeService, textFileService, editorService, editorGroupService);
 
 		// Clear view state for deleted files
-		this.toUnbind.push(this.fileService.onFileChanges(e => this.onFilesChanged(e)));
+		this._register(this.fileService.onFileChanges(e => this.onFilesChanged(e)));
 	}
 
 	private onFilesChanged(e: FileChangesEvent): void {
@@ -83,7 +83,7 @@ export class TextFileEditor extends BaseTextEditor {
 		// React to editors closing to preserve view state. This needs to happen
 		// in the onWillCloseEditor because at that time the editor has not yet
 		// been disposed and we can safely persist the view state still.
-		this.toUnbind.push((group as IEditorGroupView).onWillCloseEditor(e => {
+		this._register((group as IEditorGroupView).onWillCloseEditor(e => {
 			if (e.editor === this.input) {
 				this.doSaveTextEditorViewState(this.input);
 			}

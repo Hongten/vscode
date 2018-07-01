@@ -70,7 +70,7 @@ export class ProgressBar extends Disposable {
 						break;
 				}
 
-			}, this._toDispose);
+			}, this.toDispose);
 
 			this.bit = builder.getHTMLElement();
 		});

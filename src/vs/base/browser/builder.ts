@@ -70,8 +70,8 @@ export class Builder implements IDisposable {
 	private offdom: boolean;
 	private container: HTMLElement;
 	private createdElements: HTMLElement[];
-	private toUnbind: { [type: string]: IDisposable[]; };
-	private captureToUnbind: { [type: string]: IDisposable[]; };
+	private toDispose: { [type: string]: IDisposable[]; };
+	private captureToDispose: { [type: string]: IDisposable[]; };
 
 	constructor(element?: HTMLElement, offdom?: boolean) {
 		this.offdom = offdom;
@@ -81,8 +81,8 @@ export class Builder implements IDisposable {
 		this.currentElement = element;
 		this.createdElements = [];
 
-		this.toUnbind = {};
-		this.captureToUnbind = {};
+		this.toDispose = {};
+		this.captureToDispose = {};
 	}
 
 	/**
@@ -100,8 +100,8 @@ export class Builder implements IDisposable {
 		let builder = new Builder(this.container, this.offdom);
 		builder.currentElement = this.currentElement;
 		builder.createdElements = this.createdElements;
-		builder.captureToUnbind = this.captureToUnbind;
-		builder.toUnbind = this.toUnbind;
+		builder.captureToDispose = this.captureToDispose;
+		builder.toDispose = this.toDispose;
 
 		return builder;
 	}
@@ -389,14 +389,14 @@ export class Builder implements IDisposable {
 	/**
 	 *  Registers listener on event types on the current element.
 	 */
-	on<E extends Event = Event>(type: string, fn: (e: E, builder: Builder, unbind: IDisposable) => void, listenerToUnbindContainer?: IDisposable[], useCapture?: boolean): Builder;
-	on<E extends Event = Event>(typeArray: string[], fn: (e: E, builder: Builder, unbind: IDisposable) => void, listenerToUnbindContainer?: IDisposable[], useCapture?: boolean): Builder;
-	on<E extends Event = Event>(arg1: any, fn: (e: E, builder: Builder, unbind: IDisposable) => void, listenerToUnbindContainer?: IDisposable[], useCapture?: boolean): Builder {
+	on<E extends Event = Event>(type: string, fn: (e: E, builder: Builder, unbind: IDisposable) => void, listenerToDisposeContainer?: IDisposable[], useCapture?: boolean): Builder;
+	on<E extends Event = Event>(typeArray: string[], fn: (e: E, builder: Builder, unbind: IDisposable) => void, listenerToDisposeContainer?: IDisposable[], useCapture?: boolean): Builder;
+	on<E extends Event = Event>(arg1: any, fn: (e: E, builder: Builder, unbind: IDisposable) => void, listenerToDisposeContainer?: IDisposable[], useCapture?: boolean): Builder {
 
 		// Event Type Array
 		if (types.isArray(arg1)) {
 			arg1.forEach((type: string) => {
-				this.on(type, fn, listenerToUnbindContainer, useCapture);
+				this.on(type, fn, listenerToDisposeContainer, useCapture);
 			});
 		}
 
@@ -411,15 +411,15 @@ export class Builder implements IDisposable {
 
 			// Remember for off() use
 			if (useCapture) {
-				if (!this.captureToUnbind[type]) {
-					this.captureToUnbind[type] = [];
+				if (!this.captureToDispose[type]) {
+					this.captureToDispose[type] = [];
 				}
-				this.captureToUnbind[type].push(unbind);
+				this.captureToDispose[type].push(unbind);
 			} else {
-				if (!this.toUnbind[type]) {
-					this.toUnbind[type] = [];
+				if (!this.toDispose[type]) {
+					this.toDispose[type] = [];
 				}
-				this.toUnbind[type].push(unbind);
+				this.toDispose[type].push(unbind);
 			}
 
 			// Bind to Element
@@ -428,8 +428,8 @@ export class Builder implements IDisposable {
 			this.setProperty(LISTENER_BINDING_ID, listenerBinding);
 
 			// Add to Array if passed in
-			if (listenerToUnbindContainer && types.isArray(listenerToUnbindContainer)) {
-				listenerToUnbindContainer.push(unbind);
+			if (listenerToDisposeContainer && types.isArray(listenerToDisposeContainer)) {
+				listenerToDisposeContainer.push(unbind);
 			}
 		}
 
@@ -454,12 +454,12 @@ export class Builder implements IDisposable {
 		else {
 			let type = arg1;
 			if (useCapture) {
-				if (this.captureToUnbind[type]) {
-					this.captureToUnbind[type] = dispose(this.captureToUnbind[type]);
+				if (this.captureToDispose[type]) {
+					this.captureToDispose[type] = dispose(this.captureToDispose[type]);
 				}
 			} else {
-				if (this.toUnbind[type]) {
-					this.toUnbind[type] = dispose(this.toUnbind[type]);
+				if (this.toDispose[type]) {
+					this.toDispose[type] = dispose(this.toDispose[type]);
 				}
 			}
 		}
@@ -471,9 +471,9 @@ export class Builder implements IDisposable {
 	 *  Registers listener on event types on the current element and removes
 	 *  them after first invocation.
 	 */
-	once<E extends Event = Event>(type: string, fn: (e: E, builder: Builder, unbind: IDisposable) => void, listenerToUnbindContainer?: IDisposable[], useCapture?: boolean): Builder;
-	once<E extends Event = Event>(typesArray: string[], fn: (e: E, builder: Builder, unbind: IDisposable) => void, listenerToUnbindContainer?: IDisposable[], useCapture?: boolean): Builder;
-	once<E extends Event = Event>(arg1: any, fn: (e: E, builder: Builder, unbind: IDisposable) => void, listenerToUnbindContainer?: IDisposable[], useCapture?: boolean): Builder {
+	once<E extends Event = Event>(type: string, fn: (e: E, builder: Builder, unbind: IDisposable) => void, listenerToDisposeContainer?: IDisposable[], useCapture?: boolean): Builder;
+	once<E extends Event = Event>(typesArray: string[], fn: (e: E, builder: Builder, unbind: IDisposable) => void, listenerToDisposeContainer?: IDisposable[], useCapture?: boolean): Builder;
+	once<E extends Event = Event>(arg1: any, fn: (e: E, builder: Builder, unbind: IDisposable) => void, listenerToDisposeContainer?: IDisposable[], useCapture?: boolean): Builder {
 
 		// Event Type Array
 		if (types.isArray(arg1)) {
@@ -493,8 +493,8 @@ export class Builder implements IDisposable {
 			}, useCapture || false);
 
 			// Add to Array if passed in
-			if (listenerToUnbindContainer && types.isArray(listenerToUnbindContainer)) {
-				listenerToUnbindContainer.push(unbind);
+			if (listenerToDisposeContainer && types.isArray(listenerToDisposeContainer)) {
+				listenerToDisposeContainer.push(unbind);
 			}
 		}
 
@@ -1144,15 +1144,15 @@ export class Builder implements IDisposable {
 
 		let type: string;
 
-		for (type in this.toUnbind) {
-			if (this.toUnbind.hasOwnProperty(type) && types.isArray(this.toUnbind[type])) {
-				this.toUnbind[type] = dispose(this.toUnbind[type]);
+		for (type in this.toDispose) {
+			if (this.toDispose.hasOwnProperty(type) && types.isArray(this.toDispose[type])) {
+				this.toDispose[type] = dispose(this.toDispose[type]);
 			}
 		}
 
-		for (type in this.captureToUnbind) {
-			if (this.captureToUnbind.hasOwnProperty(type) && types.isArray(this.captureToUnbind[type])) {
-				this.captureToUnbind[type] = dispose(this.captureToUnbind[type]);
+		for (type in this.captureToDispose) {
+			if (this.captureToDispose.hasOwnProperty(type) && types.isArray(this.captureToDispose[type])) {
+				this.captureToDispose[type] = dispose(this.captureToDispose[type]);
 			}
 		}
 
@@ -1161,8 +1161,8 @@ export class Builder implements IDisposable {
 		this.container = null;
 		this.offdom = null;
 		this.createdElements = null;
-		this.captureToUnbind = null;
-		this.toUnbind = null;
+		this.captureToDispose = null;
+		this.toDispose = null;
 	}
 
 	/**

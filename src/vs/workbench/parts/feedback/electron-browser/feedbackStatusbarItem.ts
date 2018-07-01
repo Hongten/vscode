@@ -73,15 +73,14 @@ export class FeedbackStatusbarItem extends Themable implements IStatusbarItem {
 
 		this.enabled = this.configurationService.getValue(FEEDBACK_VISIBLE_CONFIG);
 
-		this.hideAction = this.instantiationService.createInstance(HideAction);
-		this.toUnbind.push(this.hideAction);
+		this.hideAction = this._register(this.instantiationService.createInstance(HideAction));
 
 		this.registerListeners();
 	}
 
 	private registerListeners(): void {
-		this.toUnbind.push(this.contextService.onDidChangeWorkbenchState(() => this.updateStyles()));
-		this.toUnbind.push(this.configurationService.onDidChangeConfiguration(e => this.onConfigurationUpdated(e)));
+		this._register(this.contextService.onDidChangeWorkbenchState(() => this.updateStyles()));
+		this._register(this.configurationService.onDidChangeConfiguration(e => this.onConfigurationUpdated(e)));
 	}
 
 	private onConfigurationUpdated(event: IConfigurationChangeEvent): void {
@@ -107,7 +106,7 @@ export class FeedbackStatusbarItem extends Themable implements IStatusbarItem {
 			if (e.button !== 0) {
 				EventHelper.stop(e, true);
 			}
-		}, this.toUnbind, true);
+		}, this.toDispose, true);
 
 		// Offer context menu to hide status bar entry
 		$(this.container).on('contextmenu', e => {
@@ -117,7 +116,7 @@ export class FeedbackStatusbarItem extends Themable implements IStatusbarItem {
 				getAnchor: () => this.container,
 				getActions: () => TPromise.as([this.hideAction])
 			});
-		}, this.toUnbind);
+		}, this.toDispose);
 
 		return this.update();
 	}
@@ -128,7 +127,7 @@ export class FeedbackStatusbarItem extends Themable implements IStatusbarItem {
 		// Create
 		if (enabled) {
 			if (!this.dropdown) {
-				this.dropdown = this.instantiationService.createInstance(FeedbackDropdown, this.container, {
+				this.dropdown = this._register(this.instantiationService.createInstance(FeedbackDropdown, this.container, {
 					contextViewProvider: this.contextViewService,
 					feedbackService: this.instantiationService.createInstance(TwitterFeedbackService),
 					onFeedbackVisibilityChange: visible => {
@@ -138,8 +137,7 @@ export class FeedbackStatusbarItem extends Themable implements IStatusbarItem {
 							removeClass(this.container, 'has-beak');
 						}
 					}
-				} as IFeedbackDropdownOptions);
-				this.toUnbind.push(this.dropdown);
+				} as IFeedbackDropdownOptions));
 
 				this.updateStyles();
 
