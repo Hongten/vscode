@@ -18,7 +18,7 @@ import { FileOperationError, FileOperationResult } from 'vs/platform/files/commo
 import { ITextFileService, AutoSaveMode, ModelState, TextFileModelChangeEvent } from 'vs/workbench/services/textfile/common/textfiles';
 import { IWorkspaceContextService } from 'vs/platform/workspace/common/workspace';
 import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
-import { IDisposable, dispose, IReference } from 'vs/base/common/lifecycle';
+import { IReference } from 'vs/base/common/lifecycle';
 import { telemetryURIDescriptor } from 'vs/platform/telemetry/common/telemetryUtils';
 import { IEnvironmentService } from 'vs/platform/environment/common/environment';
 import { ITextModelService } from 'vs/editor/common/services/resolverService';
@@ -35,7 +35,6 @@ export class FileEditorInput extends EditorInput implements IFileEditorInput {
 	private forceOpenAsText: boolean;
 	private textModelReference: TPromise<IReference<ITextEditorModel>>;
 	private name: string;
-	private toDispose: IDisposable[] = [];
 
 	/**
 	 * An editor input who's contents are retrieved from file services.
@@ -60,11 +59,11 @@ export class FileEditorInput extends EditorInput implements IFileEditorInput {
 	private registerListeners(): void {
 
 		// Model changes
-		this.toDispose.push(this.textFileService.models.onModelDirty(e => this.onDirtyStateChange(e)));
-		this.toDispose.push(this.textFileService.models.onModelSaveError(e => this.onDirtyStateChange(e)));
-		this.toDispose.push(this.textFileService.models.onModelSaved(e => this.onDirtyStateChange(e)));
-		this.toDispose.push(this.textFileService.models.onModelReverted(e => this.onDirtyStateChange(e)));
-		this.toDispose.push(this.textFileService.models.onModelOrphanedChanged(e => this.onModelOrphanedChanged(e)));
+		this._register(this.textFileService.models.onModelDirty(e => this.onDirtyStateChange(e)));
+		this._register(this.textFileService.models.onModelSaveError(e => this.onDirtyStateChange(e)));
+		this._register(this.textFileService.models.onModelSaved(e => this.onDirtyStateChange(e)));
+		this._register(this.textFileService.models.onModelReverted(e => this.onDirtyStateChange(e)));
+		this._register(this.textFileService.models.onModelOrphanedChanged(e => this.onModelOrphanedChanged(e)));
 	}
 
 	private onDirtyStateChange(e: TextFileModelChangeEvent): void {
@@ -308,9 +307,6 @@ export class FileEditorInput extends EditorInput implements IFileEditorInput {
 			this.textModelReference.done(ref => ref.dispose());
 			this.textModelReference = null;
 		}
-
-		// Listeners
-		this.toDispose = dispose(this.toDispose);
 
 		super.dispose();
 	}

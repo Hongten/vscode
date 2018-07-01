@@ -9,7 +9,7 @@ import { Event, Emitter, once } from 'vs/base/common/event';
 import * as objects from 'vs/base/common/objects';
 import * as types from 'vs/base/common/types';
 import URI from 'vs/base/common/uri';
-import { IDisposable, dispose, Disposable } from 'vs/base/common/lifecycle';
+import { IDisposable, Disposable } from 'vs/base/common/lifecycle';
 import { IEditor as ICodeEditor, IEditorViewState, ScrollType, IDiffEditor } from 'vs/editor/common/editorCommon';
 import { IEditorModel, IEditorOptions, ITextEditorOptions, IBaseResourceInput } from 'vs/platform/editor/common/editor';
 import { IInstantiationService, IConstructorSignature0 } from 'vs/platform/instantiation/common/instantiation';
@@ -318,15 +318,15 @@ export interface IEditorInput extends IDisposable {
  * Editor inputs are lightweight objects that can be passed to the workbench API to open inside the editor part.
  * Each editor input is mapped to an editor that is capable of opening it through the Platform facade.
  */
-export abstract class EditorInput implements IEditorInput {
+export abstract class EditorInput extends Disposable implements IEditorInput {
 
-	protected readonly _onDidChangeDirty: Emitter<void> = new Emitter<void>();
+	protected readonly _onDidChangeDirty: Emitter<void> = this._register(new Emitter<void>());
 	get onDidChangeDirty(): Event<void> { return this._onDidChangeDirty.event; }
 
-	protected readonly _onDidChangeLabel: Emitter<void> = new Emitter<void>();
+	protected readonly _onDidChangeLabel: Emitter<void> = this._register(new Emitter<void>());
 	get onDidChangeLabel(): Event<void> { return this._onDidChangeLabel.event; }
 
-	private readonly _onDispose: Emitter<void> = new Emitter<void>();
+	private readonly _onDispose: Emitter<void> = this._register(new Emitter<void>());
 	get onDispose(): Event<void> { return this._onDispose.event; }
 
 	private disposed: boolean = false;
@@ -454,9 +454,7 @@ export abstract class EditorInput implements IEditorInput {
 		this.disposed = true;
 		this._onDispose.fire();
 
-		this._onDidChangeDirty.dispose();
-		this._onDidChangeLabel.dispose();
-		this._onDispose.dispose();
+		super.dispose();
 	}
 
 	/**
@@ -523,8 +521,6 @@ export class SideBySideEditorInput extends EditorInput {
 
 	static readonly ID: string = 'workbench.editorinputs.sidebysideEditorInput';
 
-	private toDispose: IDisposable[] = [];
-
 	constructor(private name: string, private description: string, private _details: EditorInput, private _master: EditorInput) {
 		super();
 
@@ -564,22 +560,22 @@ export class SideBySideEditorInput extends EditorInput {
 
 		// When the details or master input gets disposed, dispose this diff editor input
 		const onceDetailsDisposed = once(this.details.onDispose);
-		this.toDispose.push(onceDetailsDisposed(() => {
+		this._register(onceDetailsDisposed(() => {
 			if (!this.isDisposed()) {
 				this.dispose();
 			}
 		}));
 
 		const onceMasterDisposed = once(this.master.onDispose);
-		this.toDispose.push(onceMasterDisposed(() => {
+		this._register(onceMasterDisposed(() => {
 			if (!this.isDisposed()) {
 				this.dispose();
 			}
 		}));
 
 		// Reemit some events from the master side to the outside
-		this.toDispose.push(this.master.onDidChangeDirty(() => this._onDidChangeDirty.fire()));
-		this.toDispose.push(this.master.onDidChangeLabel(() => this._onDidChangeLabel.fire()));
+		this._register(this.master.onDidChangeDirty(() => this._onDidChangeDirty.fire()));
+		this._register(this.master.onDidChangeLabel(() => this._onDidChangeLabel.fire()));
 	}
 
 	resolve(refresh?: boolean): TPromise<EditorModel> {
@@ -613,11 +609,6 @@ export class SideBySideEditorInput extends EditorInput {
 		}
 
 		return false;
-	}
-
-	dispose(): void {
-		this.toDispose = dispose(this.toDispose);
-		super.dispose();
 	}
 }
 

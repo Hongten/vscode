@@ -22,6 +22,7 @@ import { IEditorOptions, RenderLineNumbersType } from 'vs/editor/common/config/e
 import { IEditorService, SIDE_GROUP } from 'vs/workbench/services/editor/common/editorService';
 import { isCodeEditor, isDiffEditor } from 'vs/editor/browser/editorBrowser';
 import { IEditorGroup } from 'vs/workbench/services/group/common/editorGroupsService';
+import { once } from 'vs/base/common/event';
 
 export const GOTO_LINE_PREFIX = ':';
 
@@ -60,12 +61,7 @@ export class GotoLineAction extends QuickOpenAction {
 		const result = super.run();
 
 		if (restoreOptions) {
-			let toDispose = this._quickOpenService.onHide(() => {
-				if (!toDispose) {
-					return;
-				}
-				toDispose.dispose();
-				toDispose = null;
+			once(this._quickOpenService.onHide)(() => {
 				activeTextEditorWidget.updateOptions(restoreOptions);
 			});
 		}

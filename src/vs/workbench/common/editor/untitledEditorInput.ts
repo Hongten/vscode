@@ -16,7 +16,6 @@ import { EditorInput, IEncodingSupport, EncodingMode, ConfirmResult, Verbosity }
 import { UntitledEditorModel } from 'vs/workbench/common/editor/untitledEditorModel';
 import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
 import { IWorkspaceContextService } from 'vs/platform/workspace/common/workspace';
-import { IDisposable, dispose } from 'vs/base/common/lifecycle';
 import { Event, Emitter } from 'vs/base/common/event';
 import { ITextFileService } from 'vs/workbench/services/textfile/common/textfiles';
 import { telemetryURIDescriptor } from 'vs/platform/telemetry/common/telemetryUtils';
@@ -34,13 +33,11 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 	private cachedModel: UntitledEditorModel;
 	private modelResolve: TPromise<UntitledEditorModel>;
 
-	private readonly _onDidModelChangeContent: Emitter<void> = new Emitter<void>();
+	private readonly _onDidModelChangeContent: Emitter<void> = this._register(new Emitter<void>());
 	get onDidModelChangeContent(): Event<void> { return this._onDidModelChangeContent.event; }
 
-	private readonly _onDidModelChangeEncoding: Emitter<void> = new Emitter<void>();
+	private readonly _onDidModelChangeEncoding: Emitter<void> = this._register(new Emitter<void>());
 	get onDidModelChangeEncoding(): Event<void> { return this._onDidModelChangeEncoding.event; }
-
-	private toDispose: IDisposable[] = [];
 
 	constructor(
 		private resource: URI,
@@ -232,12 +229,12 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 	}
 
 	private createModel(): UntitledEditorModel {
-		const model = this.instantiationService.createInstance(UntitledEditorModel, this.modeId, this.resource, this.hasAssociatedFilePath, this.initialValue, this.preferredEncoding);
+		const model = this._register(this.instantiationService.createInstance(UntitledEditorModel, this.modeId, this.resource, this.hasAssociatedFilePath, this.initialValue, this.preferredEncoding));
 
 		// re-emit some events from the model
-		this.toDispose.push(model.onDidChangeContent(() => this._onDidModelChangeContent.fire()));
-		this.toDispose.push(model.onDidChangeDirty(() => this._onDidChangeDirty.fire()));
-		this.toDispose.push(model.onDidChangeEncoding(() => this._onDidModelChangeEncoding.fire()));
+		this._register(model.onDidChangeContent(() => this._onDidModelChangeContent.fire()));
+		this._register(model.onDidChangeDirty(() => this._onDidChangeDirty.fire()));
+		this._register(model.onDidChangeEncoding(() => this._onDidModelChangeEncoding.fire()));
 
 		return model;
 	}
@@ -270,18 +267,6 @@ export class UntitledEditorInput extends EditorInput implements IEncodingSupport
 	}
 
 	dispose(): void {
-		this._onDidModelChangeContent.dispose();
-		this._onDidModelChangeEncoding.dispose();
-
-		// Listeners
-		dispose(this.toDispose);
-
-		// Model
-		if (this.cachedModel) {
-			this.cachedModel.dispose();
-			this.cachedModel = null;
-		}
-
 		this.modelResolve = void 0;
 
 		super.dispose();
