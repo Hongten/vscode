@@ -32,14 +32,14 @@ class TwitterFeedbackService implements IFeedbackService {
 		return TwitterFeedbackService.HASHTAGS.join(',');
 	}
 
-	public submitFeedback(feedback: IFeedback): void {
+	submitFeedback(feedback: IFeedback): void {
 		const queryString = `?${feedback.sentiment === 1 ? `hashtags=${this.combineHashTagsAsString()}&` : null}ref_src=twsrc%5Etfw&related=twitterapi%2Ctwitter&text=${encodeURIComponent(feedback.feedback)}&tw_p=tweetbutton&via=${TwitterFeedbackService.VIA_NAME}`;
 		const url = TwitterFeedbackService.TWITTER_URL + queryString;
 
 		window.open(url);
 	}
 
-	public getCharacterLimit(sentiment: number): number {
+	getCharacterLimit(sentiment: number): number {
 		let length: number = 0;
 		if (sentiment === 1) {
 			TwitterFeedbackService.HASHTAGS.forEach(element => {
@@ -99,7 +99,7 @@ export class FeedbackStatusbarItem extends Themable implements IStatusbarItem {
 		}
 	}
 
-	public render(element: HTMLElement): IDisposable {
+	render(element: HTMLElement): IDisposable {
 		this.container = element;
 
 		// Prevent showing dropdown on anything but left click
@@ -166,7 +166,7 @@ class HideAction extends Action {
 		super('feedback.hide', localize('hide', "Hide"));
 	}
 
-	public run(extensionId: string): TPromise<any> {
+	run(extensionId: string): TPromise<any> {
 		return this.configurationService.updateValue(FEEDBACK_VISIBLE_CONFIG, false);
 	}
 }
